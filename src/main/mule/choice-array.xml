@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="3cc3e629-8794-4dab-9893-f19357916648" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="choice-arrayFlow" doc:id="a4a59a38-de18-4e61-8abe-c5ced8f99eb8" >
+		<http:listener doc:name="Listener" doc:id="a3d08369-1ae2-4eea-b772-f0c7fddd0554" config-ref="HTTP_Listener_config" path="/choicearray"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7a987574-6a94-4354-9b4d-498230c53e59" message="flow started"/>
+		<ee:transform doc:name="Transform Message" doc:id="230006aa-5118-4eea-8b70-1d9b4159c9c7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+0 to 100]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="3d309d7d-7616-469d-84bf-54a16e6b9b80" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="even" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="odd" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="a364131a-461e-47ad-af86-187acb7a9f58" collection="#[payload]">
+			<choice doc:name="Choice" doc:id="15cc745c-9113-4b9a-b325-ea9c159f070e">
+			<when expression="#[(((payload default 0) as Number) mod 2) == 0]">
+				<ee:transform doc:name="Transform Message" doc:id="34e8978b-a800-42c1-a8e0-5c1054363404">
+					<ee:message>
+					</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="even" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.even + payload]]></ee:set-variable>
+						</ee:variables>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Transform Message" doc:id="d7a38fe8-d269-4ec9-84b4-1582cf8e0fae">
+					<ee:message>
+					</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="odd" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.odd + payload]]></ee:set-variable>
+						</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="930bdd74-9ca0-4db5-9c6f-f28f2dd38e50" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"even numbers": vars.even,
+	"odd numbers": vars.odd
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
